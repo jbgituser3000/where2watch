@@ -193,7 +193,6 @@ export default function App() {
               {searching ? '...' : 'Search'}
             </button>
           </form>
-        </div>
 
         <div className="main-content">
         {error && <p className="error">{error}</p>}
@@ -323,8 +322,8 @@ export default function App() {
             )}
           </div>
         )}
-        </div> {/* end main-content */}
-      </div> {/* end left-panel */}
+        </div>
+      </div>
 
       {/* Right panel: globe stays fixed while left scrolls */}
       <div className="right-panel">
