@@ -144,13 +144,12 @@ export default function App() {
 
   return (
     <div className="app">
-      {/* Hero: brand + search on left, globe on right */}
-      <div className="hero">
-        <div className="hero-left">
-          <div className="brand">
-            <h1>where<span className="brand-accent">2</span>watch</h1>
-            <p className="tagline">Find any movie or show — free, anywhere in the world.</p>
-          </div>
+      {/* Left panel: brand + search + results — scrolls independently */}
+      <div className="left-panel">
+        <div className="brand">
+          <h1>where<span className="brand-accent">2</span>watch</h1>
+          <p className="tagline">Find any movie or show — free, anywhere in the world.</p>
+        </div>
 
           <form onSubmit={handleSearch} className="search-form">
             <div className="search-input-wrapper">
@@ -196,13 +195,7 @@ export default function App() {
           </form>
         </div>
 
-        <div className="hero-right">
-          <Globe freeCountries={freeCountryCodes} subCountries={subCountryCodes} />
-        </div>
-      </div>
-
-      {/* Content below hero */}
-      <div className="content">
+        <div className="main-content">
         {error && <p className="error">{error}</p>}
 
         {/* Search results grid */}
@@ -330,6 +323,12 @@ export default function App() {
             )}
           </div>
         )}
+        </div> {/* end main-content */}
+      </div> {/* end left-panel */}
+
+      {/* Right panel: globe stays fixed while left scrolls */}
+      <div className="right-panel">
+        <Globe freeCountries={freeCountryCodes} subCountries={subCountryCodes} />
       </div>
     </div>
   )
