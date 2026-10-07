@@ -357,6 +357,87 @@ body {
   font-size: 0.83rem;
 }
 
+/* ── Watchlist ── */
+.brand-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+
+.watchlist-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  background: #0f0f1e;
+  border: 1px solid #1e1e38;
+  border-radius: 8px;
+  color: #b0b0c8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.watchlist-toggle:hover, .watchlist-toggle.active { border-color: #4a3a88; color: #fff; }
+
+.watchlist-count {
+  background: #7c6bff;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.section-title {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
+}
+
+.watchlist-view .hint { margin-bottom: 10px; }
+
+.card-wrap { position: relative; display: flex; }
+.card-wrap .result-card { flex: 1; }
+
+.save-btn {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(8, 8, 15, 0.75);
+  color: #fff;
+  font-size: 0.95rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.1s;
+}
+
+.save-btn:hover { background: #7c6bff; transform: scale(1.08); }
+.save-btn.saved { background: #7c6bff; border-color: #7c6bff; }
+
+.detail-save-btn {
+  margin-top: 10px;
+  padding: 7px 12px;
+  background: #0f0f1e;
+  border: 1px solid #4a3a88;
+  border-radius: 8px;
+  color: #a78bfa;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.detail-save-btn:hover { background: #151528; color: #fff; }
+.detail-save-btn.saved { background: #7c6bff; border-color: #7c6bff; color: #fff; }
+
 /* ── Mobile ── */
 @media (max-width: 600px) {
   .hero { flex-direction: column; padding: 20px 0 16px; gap: 16px; }

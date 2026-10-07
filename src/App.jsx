@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { searchMulti, getWatchProviders } from './api/tmdb'
 import Globe from './components/Globe'
+import useWatchlist from './hooks/useWatchlist'
 import './App.css'
 
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/w200'
@@ -47,6 +48,34 @@ function getServiceUrl(providerName, title) {
   return urls[providerName] || null
 }
 
+function PosterCard({ item, saved, onSelect, onToggleSave }) {
+  return (
+    <div className="card-wrap">
+      <button className="result-card" onClick={() => onSelect(item)}>
+        {item.poster_path
+          ? <img src={`${IMAGE_BASE}${item.poster_path}`} alt={item.title || item.name} />
+          : <div className="no-poster">No image</div>
+        }
+        <div className="result-info">
+          <strong>{item.title || item.name}</strong>
+          <span>
+            {item.media_type === 'tv' ? 'TV Show' : 'Movie'}
+            {(item.release_date || item.first_air_date) && ` · ${(item.release_date || item.first_air_date).slice(0, 4)}`}
+          </span>
+        </div>
+      </button>
+      <button
+        className={`save-btn${saved ? ' saved' : ''}`}
+        onClick={() => onToggleSave(item)}
+        title={saved ? 'Remove from watchlist' : 'Add to watchlist'}
+        aria-label={saved ? 'Remove from watchlist' : 'Add to watchlist'}
+      >
+        {saved ? '✓' : '+'}
+      </button>
+    </div>
+  )
+}
+
 export default function App() {
   const [query, setQuery] = useState('')
   const [suggestions, setSuggestions] = useState([])
@@ -58,6 +87,8 @@ export default function App() {
   const [loadingProviders, setLoadingProviders] = useState(false)
   const [error, setError] = useState(null)
   const [hasSearched, setHasSearched] = useState(false)
+  const [view, setView] = useState('search') // 'search' | 'watchlist'
+  const watchlist = useWatchlist()
 
   // Debounced autocomplete
   useEffect(() => {
@@ -75,6 +106,7 @@ export default function App() {
     e.preventDefault()
     if (!query.trim()) return
     setShowSuggestions(false)
+    setView('search')
     setSearching(true)
     setSelected(null)
     setProviders(null)
@@ -90,7 +122,7 @@ export default function App() {
   }
 
   async function handleSelect(item) {
-    setQuery(item.title || item.name) // fill the search bar with the selected title
+    if (view === 'search') setQuery(item.title || item.name) // fill the search bar with the selected title
     setSelected(item)
     setProviders(null)
     setShowSuggestions(false)
@@ -102,6 +134,13 @@ export default function App() {
       setError('Failed to load streaming info.')
     }
     setLoadingProviders(false)
+  }
+
+  function toggleWatchlistView() {
+    setView(v => (v === 'watchlist' ? 'search' : 'watchlist'))
+    setSelected(null)
+    setProviders(null)
+    setError(null)
   }
 
   function handleBack() {
@@ -146,9 +185,20 @@ export default function App() {
     <div className="app">
       <div className="hero">
         <div className="hero-left">
-          <div className="brand">
-            <h1>where<span className="brand-accent">2</span>watch</h1>
-            <p className="tagline">Find any movie or show — free, anywhere in the world.</p>
+          <div className="brand-row">
+            <div className="brand">
+              <h1>where<span className="brand-accent">2</span>watch</h1>
+              <p className="tagline">Find any movie or show — free, anywhere in the world.</p>
+            </div>
+            <button
+              className={`watchlist-toggle${view === 'watchlist' ? ' active' : ''}`}
+              onClick={toggleWatchlistView}
+            >
+              {view === 'watchlist' ? '← Search' : 'Watchlist'}
+              {view !== 'watchlist' && watchlist.items.length > 0 && (
+                <span className="watchlist-count">{watchlist.items.length}</span>
+              )}
+            </button>
           </div>
           <form onSubmit={handleSearch} className="search-form">
             <div className="search-input-wrapper">
@@ -202,34 +252,55 @@ export default function App() {
         {error && <p className="error">{error}</p>}
 
         {/* Search results grid */}
-        {!selected && results.length > 0 && (
+        {view === 'search' && !selected && results.length > 0 && (
           <div className="results-grid">
             {results.map(item => (
-              <button key={item.id} className="result-card" onClick={() => handleSelect(item)}>
-                {item.poster_path
-                  ? <img src={`${IMAGE_BASE}${item.poster_path}`} alt={item.title || item.name} />
-                  : <div className="no-poster">No image</div>
-                }
-                <div className="result-info">
-                  <strong>{item.title || item.name}</strong>
-                  <span>
-                    {item.media_type === 'tv' ? 'TV Show' : 'Movie'}
-                    {(item.release_date || item.first_air_date) && ` · ${(item.release_date || item.first_air_date).slice(0, 4)}`}
-                  </span>
-                </div>
-              </button>
+              <PosterCard
+                key={`${item.media_type}:${item.id}`}
+                item={item}
+                saved={watchlist.has(item)}
+                onSelect={handleSelect}
+                onToggleSave={watchlist.toggle}
+              />
             ))}
           </div>
         )}
 
-        {!selected && !searching && hasSearched && results.length === 0 && (
+        {/* Watchlist */}
+        {view === 'watchlist' && !selected && (
+          <div className="watchlist-view">
+            <h2 className="section-title">Your watchlist</h2>
+            {watchlist.items.length > 0 ? (
+              <>
+                <p className="hint">Click a title to see where it's streaming.</p>
+                <div className="results-grid">
+                  {watchlist.items.map(item => (
+                    <PosterCard
+                      key={`${item.media_type}:${item.id}`}
+                      item={item}
+                      saved
+                      onSelect={handleSelect}
+                      onToggleSave={watchlist.toggle}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="empty-state">Nothing saved yet. Hit + on any title to add it here.</p>
+            )}
+          </div>
+        )}
+
+        {view === 'search' && !selected && !searching && hasSearched && results.length === 0 && (
           <p className="empty-state">No results found for "{query}"</p>
         )}
 
         {/* Detail view */}
         {selected && (
           <div className="detail-view">
-            <button className="back-btn" onClick={handleBack}>← Back to results</button>
+            <button className="back-btn" onClick={handleBack}>
+              {view === 'watchlist' ? '← Back to watchlist' : '← Back to results'}
+            </button>
 
             <div className="detail-header">
               {selected.poster_path && (
@@ -243,6 +314,12 @@ export default function App() {
                 <div className="detail-type">{selected.media_type === 'tv' ? 'TV Show' : 'Movie'}</div>
                 <h2>{selected.title || selected.name}</h2>
                 {selected.overview && <p className="overview">{selected.overview}</p>}
+                <button
+                  className={`detail-save-btn${watchlist.has(selected) ? ' saved' : ''}`}
+                  onClick={() => watchlist.toggle(selected)}
+                >
+                  {watchlist.has(selected) ? '✓ In watchlist' : '+ Add to watchlist'}
+                </button>
               </div>
             </div>
 
