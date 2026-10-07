@@ -1,26 +1,12 @@
-import { useState, useEffect } from 'react'
-
-const STORAGE_KEY = 'where2watch:watchlist'
-
-function load() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY))
-    return Array.isArray(saved) ? saved : []
-  } catch {
-    return []
-  }
-}
+import useStoredState from './useStoredState'
 
 // Same TMDB id can be both a movie and a show, so key on both
-const keyOf = item => `${item.media_type}:${item.id}`
+export const keyOf = item => `${item.media_type}:${item.id}`
 
 // Watchlist saved in the browser — no accounts, persists per device
 export default function useWatchlist() {
-  const [items, setItems] = useState(load)
-
-  useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)) } catch { /* storage blocked */ }
-  }, [items])
+  const [stored, setItems] = useStoredState('where2watch:watchlist', [])
+  const items = Array.isArray(stored) ? stored : []
 
   const has = item => items.some(i => keyOf(i) === keyOf(item))
 

@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react'
 import { searchMulti, getWatchProviders } from './api/tmdb'
 import Globe from './components/Globe'
+import ServicesPicker from './components/ServicesPicker'
+import AlertsPanel from './components/AlertsPanel'
 import useWatchlist from './hooks/useWatchlist'
+import useMyServices from './hooks/useMyServices'
+import useAlerts from './hooks/useAlerts'
+import { streamingServices } from './services'
 import './App.css'
 
 const IMAGE_BASE = 'https://image.tmdb.org/t/p/w200'
@@ -48,14 +53,22 @@ function getServiceUrl(providerName, title) {
   return urls[providerName] || null
 }
 
-function PosterCard({ item, saved, onSelect, onToggleSave }) {
+function PosterCard({ item, saved, mine = [], onSelect, onToggleSave }) {
   return (
     <div className="card-wrap">
-      <button className="result-card" onClick={() => onSelect(item)}>
-        {item.poster_path
-          ? <img src={`${IMAGE_BASE}${item.poster_path}`} alt={item.title || item.name} />
-          : <div className="no-poster">No image</div>
-        }
+      <button className={`result-card${mine.length ? ' on-mine' : ''}`} onClick={() => onSelect(item)}>
+        <div className="poster-wrap">
+          {item.poster_path
+            ? <img src={`${IMAGE_BASE}${item.poster_path}`} alt={item.title || item.name} />
+            : <div className="no-poster">No image</div>
+          }
+          {mine.length > 0 && (
+            <span className="mine-badge" title={`On ${mine.map(s => s.name).join(', ')}`}>
+              {mine.slice(0, 3).map(s => <img key={s.name} src={`${LOGO_BASE}${s.logo_path}`} alt="" />)}
+              On your services
+            </span>
+          )}
+        </div>
         <div className="result-info">
           <strong>{item.title || item.name}</strong>
           <span>
@@ -76,6 +89,24 @@ function PosterCard({ item, saved, onSelect, onToggleSave }) {
   )
 }
 
+function ServiceLogos({ services, title, myServices }) {
+  const anyMine = myServices.services.length > 0
+  const sorted = anyMine ? [...services].sort((a, b) => myServices.has(b.provider_name) - myServices.has(a.provider_name)) : services
+  return (
+    <div className="service-logos">
+      {sorted.map(s => {
+        const mine = myServices.has(s.provider_name)
+        const cls = anyMine ? (mine ? ' mine' : ' not-mine') : ''
+        const url = getServiceUrl(s.provider_name, title)
+        const logo = <img src={`${LOGO_BASE}${s.logo_path}`} alt={s.provider_name} title={mine ? `${s.provider_name} (you have this)` : s.provider_name} className="service-logo" />
+        return url
+          ? <a key={s.provider_id} href={url} target="_blank" rel="noopener noreferrer" className={`logo-link${cls}`}>{logo}</a>
+          : <span key={s.provider_id} className={`logo-link${cls}`}>{logo}</span>
+      })}
+    </div>
+  )
+}
+
 export default function App() {
   const [query, setQuery] = useState('')
   const [suggestions, setSuggestions] = useState([])
@@ -87,7 +118,10 @@ export default function App() {
   const [loadingProviders, setLoadingProviders] = useState(false)
   const [error, setError] = useState(null)
   const [page, setPage] = useState('landing') // 'landing' | 'results' | 'watchlist'
+  const [showPicker, setShowPicker] = useState(false)
   const watchlist = useWatchlist()
+  const myServices = useMyServices()
+  const alerts = useAlerts(watchlist.items, myServices.keys)
 
   // Debounced autocomplete
   useEffect(() => {
@@ -119,11 +153,15 @@ export default function App() {
     setSearching(false)
   }
 
-  async function handleSelect(item) {
-    if (page !== 'watchlist') {
+  // from = 'watchlist' keeps the watchlist as the page to go back to
+  async function handleSelect(item, from = page === 'watchlist' ? 'watchlist' : 'results') {
+    if (from === 'watchlist') {
+      setPage('watchlist')
+    } else {
       setQuery(item.title || item.name) // fill the search bar with the selected title
       setPage('results')
     }
+    setError(null)
     setSelected(item)
     setProviders(null)
     setShowSuggestions(false)
@@ -160,6 +198,9 @@ export default function App() {
     setError(null)
   }
 
+  const countMine = services => services.filter(s => myServices.has(s.provider_name)).length
+  const byMineThenCount = (a, b) => (countMine(b.services) > 0) - (countMine(a.services) > 0) || b.services.length - a.services.length
+
   function getFreeOptions() {
     if (!providers) return []
     return Object.entries(providers)
@@ -171,7 +212,7 @@ export default function App() {
         hasAdsOnly: !d.free?.length,
         link: d.link,
       }))
-      .sort((a, b) => b.services.length - a.services.length)
+      .sort(byMineThenCount)
   }
 
   function getSubscriptionOptions() {
@@ -184,11 +225,25 @@ export default function App() {
         services: d.flatrate,
         link: d.link,
       }))
-      .sort((a, b) => b.services.length - a.services.length)
+      .sort(byMineThenCount)
   }
 
   const freeOptions = getFreeOptions()
   const subOptions = getSubscriptionOptions()
+  // the viewer's services this title streams on, with the countries for each
+  // (shown with the name/logo the viewer picked, their own country first)
+  const homeCountry = (navigator.language.split('-')[1] || '').toUpperCase()
+  const onMine = providers
+    ? [...streamingServices(providers).values()]
+        .filter(s => myServices.keys.has(s.key))
+        .map(s => ({
+          ...s,
+          ...myServices.services.find(m => m.key === s.key),
+          countries: s.countries.map(code => ({ code, name: getCountryName(code) }))
+            .sort((x, y) => (y.code === homeCountry) - (x.code === homeCountry) || x.name.localeCompare(y.name))
+            .map(c => c.name),
+        }))
+    : []
 
   // Reusable search bar (appears on both pages)
   const searchBar = (
@@ -236,23 +291,33 @@ export default function App() {
     </form>
   )
 
-  const watchlistButton = (
-    <button
-      className={`watchlist-toggle${page === 'watchlist' ? ' active' : ''}`}
-      onClick={toggleWatchlist}
-    >
-      {page === 'watchlist' ? '← Back' : 'Watchlist'}
-      {page !== 'watchlist' && watchlist.items.length > 0 && (
-        <span className="watchlist-count">{watchlist.items.length}</span>
-      )}
-    </button>
+  const navButtons = (
+    <nav className="nav-buttons">
+      <button className="nav-btn" onClick={() => setShowPicker(true)}>
+        My services
+        {myServices.services.length > 0 && <span className="nav-count">{myServices.services.length}</span>}
+      </button>
+      <AlertsPanel alerts={alerts} onOpenTitle={item => handleSelect(item, 'watchlist')} />
+      <button
+        className={`nav-btn${page === 'watchlist' ? ' active' : ''}`}
+        onClick={toggleWatchlist}
+      >
+        {page === 'watchlist' ? '← Back' : 'Watchlist'}
+        {page !== 'watchlist' && watchlist.items.length > 0 && (
+          <span className="nav-count">{watchlist.items.length}</span>
+        )}
+      </button>
+    </nav>
   )
+
+  const picker = showPicker && <ServicesPicker myServices={myServices} onClose={() => setShowPicker(false)} />
 
   // ── Landing page ──
   if (page === 'landing') {
     return (
       <div className="landing">
-        {watchlistButton}
+        {navButtons}
+        {picker}
         <div className="landing-content">
           <div className="brand">
             <h1>where<span className="brand-accent">2</span>watch</h1>
@@ -275,8 +340,9 @@ export default function App() {
           where<span className="brand-accent">2</span>watch
         </button>
         {searchBar}
-        {watchlistButton}
+        {navButtons}
       </header>
+      {picker}
 
       <main className="results-main">
         {error && <p className="error">{error}</p>}
@@ -302,13 +368,17 @@ export default function App() {
             <h2 className="section-title">Your watchlist</h2>
             {watchlist.items.length > 0 ? (
               <>
-                <p className="hint">Click a title to see where it's streaming.</p>
+                <p className="hint">
+                  Click a title to see where it's streaming.
+                  {myServices.services.length === 0 && <> <button className="link-btn" onClick={() => setShowPicker(true)}>Pick your services</button> to see which ones you can already watch.</>}
+                </p>
                 <div className="results-grid">
                   {watchlist.items.map(item => (
                     <PosterCard
                       key={`${item.media_type}:${item.id}`}
                       item={item}
                       saved
+                      mine={alerts.mineFor(item)}
                       onSelect={handleSelect}
                       onToggleSave={watchlist.toggle}
                     />
@@ -357,6 +427,44 @@ export default function App() {
 
             {providers && (
               <div className="providers-section">
+                {myServices.services.length > 0 ? (
+                  onMine.length > 0 ? (
+                    <div className="mine-box">
+                      <div className="group-header mine-header">
+                        <span className="group-dot mine-dot" />
+                        On your services
+                      </div>
+                      <div className="mine-list">
+                        {onMine.map(s => (
+                          <div key={s.key} className="mine-row">
+                            <img src={`${LOGO_BASE}${s.logo_path}`} alt="" className="service-logo" />
+                            <div className="mine-info">
+                              <strong>{s.name}</strong>
+                              <span>
+                                {s.countries.length} {s.countries.length === 1 ? 'country' : 'countries'}:{' '}
+                                {s.countries.slice(0, 6).join(', ')}
+                                {s.countries.length > 6 && ` +${s.countries.length - 6} more`}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mine-box none">
+                      Not streaming on any of your services right now.{' '}
+                      {watchlist.has(selected)
+                        ? "It's on your watchlist, so you'll get an alert if that changes."
+                        : <button className="link-btn" onClick={() => watchlist.toggle(selected)}>Add it to your watchlist</button>}
+                      {!watchlist.has(selected) && " to get an alert if that changes."}
+                    </div>
+                  )
+                ) : (
+                  <div className="mine-box none">
+                    <button className="link-btn" onClick={() => setShowPicker(true)}>Pick your streaming services</button> to see them highlighted here.
+                  </div>
+                )}
+
                 {freeOptions.length > 0 ? (
                   <div className="provider-group">
                     <div className="group-header free-header">
@@ -366,7 +474,7 @@ export default function App() {
                     <p className="hint">VPN into any of these countries to watch for free. Purple dots on the globe = free countries.</p>
                     <div className="country-list">
                       {freeOptions.map(({ code, name, services, hasAdsOnly }) => (
-                        <div key={code} className="country-row">
+                        <div key={code} className={`country-row${countMine(services) ? ' has-mine' : ''}`}>
                           <span className="country-label">
                             <img
                               src={`https://flagcdn.com/w20/${code.toLowerCase()}.png`}
@@ -376,15 +484,7 @@ export default function App() {
                             {name}
                             {hasAdsOnly && <span className="badge">ads</span>}
                           </span>
-                          <div className="service-logos">
-                            {services.map(s => {
-                              const url = getServiceUrl(s.provider_name, selected.title || selected.name)
-                              const logo = <img src={`${LOGO_BASE}${s.logo_path}`} alt={s.provider_name} title={s.provider_name} className="service-logo" />
-                              return url
-                                ? <a key={s.provider_id} href={url} target="_blank" rel="noopener noreferrer">{logo}</a>
-                                : <span key={s.provider_id}>{logo}</span>
-                            })}
-                          </div>
+                          <ServiceLogos services={services} title={selected.title || selected.name} myServices={myServices} />
                         </div>
                       ))}
                     </div>
@@ -402,7 +502,7 @@ export default function App() {
                     <p className="hint">Needs a paid subscription + VPN. Blue dots on the globe.</p>
                     <div className="country-list">
                       {subOptions.slice(0, 15).map(({ code, name, services }) => (
-                        <div key={code} className="country-row">
+                        <div key={code} className={`country-row${countMine(services) ? ' has-mine' : ''}`}>
                           <span className="country-label">
                             <img
                               src={`https://flagcdn.com/w20/${code.toLowerCase()}.png`}
@@ -411,15 +511,7 @@ export default function App() {
                             />
                             {name}
                           </span>
-                          <div className="service-logos">
-                            {services.map(s => {
-                              const url = getServiceUrl(s.provider_name, selected.title || selected.name)
-                              const logo = <img src={`${LOGO_BASE}${s.logo_path}`} alt={s.provider_name} title={s.provider_name} className="service-logo" />
-                              return url
-                                ? <a key={s.provider_id} href={url} target="_blank" rel="noopener noreferrer">{logo}</a>
-                                : <span key={s.provider_id}>{logo}</span>
-                            })}
-                          </div>
+                          <ServiceLogos services={services} title={selected.title || selected.name} myServices={myServices} />
                         </div>
                       ))}
                     </div>

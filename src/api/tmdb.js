@@ -23,3 +23,15 @@ export async function getWatchProviders(id, mediaType) {
   const data = await res.json()
   return data.results || {}
 }
+
+// Every streaming service TMDB knows about (movie + TV lists, deduped by id)
+export async function getProviderList() {
+  const lists = await Promise.all(['movie', 'tv'].map(async type => {
+    const res = await fetch(`${BASE_URL}/watch/providers/${type}?language=en-US`, { headers })
+    const data = await res.json()
+    return data.results || []
+  }))
+  const byId = new Map()
+  for (const p of lists.flat()) if (!byId.has(p.provider_id)) byId.set(p.provider_id, p)
+  return [...byId.values()]
+}
