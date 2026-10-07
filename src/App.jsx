@@ -86,8 +86,7 @@ export default function App() {
   const [searching, setSearching] = useState(false)
   const [loadingProviders, setLoadingProviders] = useState(false)
   const [error, setError] = useState(null)
-  const [hasSearched, setHasSearched] = useState(false)
-  const [view, setView] = useState('search') // 'search' | 'watchlist'
+  const [page, setPage] = useState('landing') // 'landing' | 'results' | 'watchlist'
   const watchlist = useWatchlist()
 
   // Debounced autocomplete
@@ -106,12 +105,11 @@ export default function App() {
     e.preventDefault()
     if (!query.trim()) return
     setShowSuggestions(false)
-    setView('search')
     setSearching(true)
     setSelected(null)
     setProviders(null)
     setError(null)
-    setHasSearched(true)
+    setPage('results')
     try {
       const data = await searchMulti(query)
       setResults(data)
@@ -122,7 +120,10 @@ export default function App() {
   }
 
   async function handleSelect(item) {
-    if (view === 'search') setQuery(item.title || item.name) // fill the search bar with the selected title
+    if (page !== 'watchlist') {
+      setQuery(item.title || item.name) // fill the search bar with the selected title
+      setPage('results')
+    }
     setSelected(item)
     setProviders(null)
     setShowSuggestions(false)
@@ -136,11 +137,21 @@ export default function App() {
     setLoadingProviders(false)
   }
 
-  function toggleWatchlistView() {
-    setView(v => (v === 'watchlist' ? 'search' : 'watchlist'))
+  function toggleWatchlist() {
+    // leaving the watchlist returns to search results if there are any, else the landing page
+    setPage(p => (p === 'watchlist' ? (results.length ? 'results' : 'landing') : 'watchlist'))
     setSelected(null)
     setProviders(null)
     setError(null)
+  }
+
+  function goHome() {
+    setPage('landing')
+    setResults([])
+    setSelected(null)
+    setProviders(null)
+    setError(null)
+    setQuery('')
   }
 
   function handleBack() {
@@ -178,81 +189,100 @@ export default function App() {
 
   const freeOptions = getFreeOptions()
   const subOptions = getSubscriptionOptions()
-  const freeCountryCodes = freeOptions.map(o => o.code)
-  const subCountryCodes = subOptions.map(o => o.code)
 
-  return (
-    <div className="app">
-      <div className="hero">
-        <div className="hero-left">
-          <div className="brand-row">
-            <div className="brand">
-              <h1>where<span className="brand-accent">2</span>watch</h1>
-              <p className="tagline">Find any movie or show — free, anywhere in the world.</p>
-            </div>
-            <button
-              className={`watchlist-toggle${view === 'watchlist' ? ' active' : ''}`}
-              onClick={toggleWatchlistView}
-            >
-              {view === 'watchlist' ? '← Search' : 'Watchlist'}
-              {view !== 'watchlist' && watchlist.items.length > 0 && (
-                <span className="watchlist-count">{watchlist.items.length}</span>
-              )}
-            </button>
-          </div>
-          <form onSubmit={handleSearch} className="search-form">
-            <div className="search-input-wrapper">
-              <input
-                value={query}
-                onChange={e => setQuery(e.target.value)}
-                onFocus={() => setShowSuggestions(true)}
-                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                placeholder="Search for a movie or show..."
-                className="search-input"
-                autoFocus
-                autoComplete="off"
-              />
-              {showSuggestions && suggestions.length > 0 && (
-                <div className="suggestions-dropdown">
-                  {suggestions.map(item => (
-                    <button
-                      key={item.id}
-                      type="button"
-                      className="suggestion-item"
-                      onMouseDown={e => e.preventDefault()}
-                      onClick={() => handleSelect(item)}
-                    >
-                      {item.poster_path
-                        ? <img src={`${THUMB_BASE}${item.poster_path}`} alt="" className="suggestion-thumb" />
-                        : <div className="suggestion-no-img" />
-                      }
-                      <div className="suggestion-text">
-                        <strong>{item.title || item.name}</strong>
-                        <span>
-                          {item.media_type === 'tv' ? 'TV Show' : 'Movie'}
-                          {(item.release_date || item.first_air_date) && ` · ${(item.release_date || item.first_air_date).slice(0, 4)}`}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
+  // Reusable search bar (appears on both pages)
+  const searchBar = (
+    <form onSubmit={handleSearch} className="search-form">
+      <div className="search-input-wrapper">
+        <input
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+          placeholder="Search for a movie or show..."
+          className="search-input"
+          autoFocus
+          autoComplete="off"
+        />
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="suggestions-dropdown">
+            {suggestions.map(item => (
+              <button
+                key={item.id}
+                type="button"
+                className="suggestion-item"
+                onMouseDown={e => e.preventDefault()}
+                onClick={() => handleSelect(item)}
+              >
+                {item.poster_path
+                  ? <img src={`${THUMB_BASE}${item.poster_path}`} alt="" className="suggestion-thumb" />
+                  : <div className="suggestion-no-img" />
+                }
+                <div className="suggestion-text">
+                  <strong>{item.title || item.name}</strong>
+                  <span>
+                    {item.media_type === 'tv' ? 'TV Show' : 'Movie'}
+                    {(item.release_date || item.first_air_date) && ` · ${(item.release_date || item.first_air_date).slice(0, 4)}`}
+                  </span>
                 </div>
-              )}
-            </div>
-            <button type="submit" className="search-btn" disabled={searching}>
-              {searching ? '...' : 'Search'}
-            </button>
-          </form>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <button type="submit" className="search-btn" disabled={searching}>
+        {searching ? '...' : 'Search'}
+      </button>
+    </form>
+  )
+
+  const watchlistButton = (
+    <button
+      className={`watchlist-toggle${page === 'watchlist' ? ' active' : ''}`}
+      onClick={toggleWatchlist}
+    >
+      {page === 'watchlist' ? '← Back' : 'Watchlist'}
+      {page !== 'watchlist' && watchlist.items.length > 0 && (
+        <span className="watchlist-count">{watchlist.items.length}</span>
+      )}
+    </button>
+  )
+
+  // ── Landing page ──
+  if (page === 'landing') {
+    return (
+      <div className="landing">
+        {watchlistButton}
+        <div className="landing-content">
+          <div className="brand">
+            <h1>where<span className="brand-accent">2</span>watch</h1>
+            <p className="tagline">Find any movie or show — free, anywhere in the world.</p>
+          </div>
+          {searchBar}
         </div>
-        <div className="hero-right">
-          <Globe freeCountries={freeCountryCodes} subCountries={subCountryCodes} />
+        <div className="globe-wrapper">
+          <Globe freeCountries={[]} subCountries={[]} />
         </div>
       </div>
+    )
+  }
 
-      <div className="main-content">
+  // ── Results + watchlist page ──
+  return (
+    <div className="results-page">
+      <header className="results-header">
+        <button className="home-btn" onClick={goHome}>
+          where<span className="brand-accent">2</span>watch
+        </button>
+        {searchBar}
+        {watchlistButton}
+      </header>
+
+      <main className="results-main">
         {error && <p className="error">{error}</p>}
 
         {/* Search results grid */}
-        {view === 'search' && !selected && results.length > 0 && (
+        {page === 'results' && !selected && results.length > 0 && (
           <div className="results-grid">
             {results.map(item => (
               <PosterCard
@@ -267,7 +297,7 @@ export default function App() {
         )}
 
         {/* Watchlist */}
-        {view === 'watchlist' && !selected && (
+        {page === 'watchlist' && !selected && (
           <div className="watchlist-view">
             <h2 className="section-title">Your watchlist</h2>
             {watchlist.items.length > 0 ? (
@@ -291,7 +321,7 @@ export default function App() {
           </div>
         )}
 
-        {view === 'search' && !selected && !searching && hasSearched && results.length === 0 && (
+        {page === 'results' && !selected && !searching && results.length === 0 && (
           <p className="empty-state">No results found for "{query}"</p>
         )}
 
@@ -299,7 +329,7 @@ export default function App() {
         {selected && (
           <div className="detail-view">
             <button className="back-btn" onClick={handleBack}>
-              {view === 'watchlist' ? '← Back to watchlist' : '← Back to results'}
+              {page === 'watchlist' ? '← Back to watchlist' : '← Back to results'}
             </button>
 
             <div className="detail-header">
@@ -403,7 +433,7 @@ export default function App() {
             )}
           </div>
         )}
-        </div>
+      </main>
     </div>
   )
 }
