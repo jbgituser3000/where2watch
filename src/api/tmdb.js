@@ -36,11 +36,16 @@ export async function getProviderList() {
   return [...byId.values()]
 }
 
+// Bump to refetch cached details (v1 cached rate-limit errors as empty details)
+export const DETAILS_VERSION = 2
+
 // Genres, runtime and rating for one title (used by the watchlist filters)
 export async function getDetails(id, mediaType) {
   const res = await fetch(`${BASE_URL}/${mediaType}/${id}?language=en-US`, { headers })
+  if (!res.ok) throw new Error(`TMDB ${res.status}`) // e.g. 429 when rate limited — don't cache as empty
   const d = await res.json()
   return {
+    v: DETAILS_VERSION,
     genres: (d.genres || []).map(g => g.name),
     // shows: length of an episode
     runtime: d.runtime || d.episode_run_time?.[0] || d.last_episode_to_air?.runtime || null,
