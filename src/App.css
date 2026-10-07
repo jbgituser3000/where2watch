@@ -27,22 +27,22 @@ html, body {
   position: relative;
   z-index: 2;
   width: 100%;
-  max-width: 560px;
-  padding: 100px 20px 0;
+  max-width: 720px;
+  padding: 110px 20px 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 18px;
-  margin-bottom: -80px; /* pulls globe up so it underlaps the search */
+  gap: 24px;
+  margin-bottom: -100px; /* pulls globe up so it underlaps the search */
 }
 
 /* Globe fills remaining space below, peeking behind the search */
 .globe-wrapper {
   position: relative;
   z-index: 1;
-  width: min(92vw, 620px);
-  height: clamp(320px, 68vh, 580px);
+  width: min(92vw, 860px);
+  height: clamp(360px, 80vh, 820px);
   flex-shrink: 0;
 }
 
@@ -63,17 +63,17 @@ html, body {
   z-index: 100;
   background: #08080f;
   border-bottom: 1px solid #181830;
-  padding: 10px 24px;
+  padding: 14px 32px;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 
 /* Clicking the brand name returns to the landing page */
 .home-btn {
   background: none;
   border: none;
-  font-size: 1.05rem;
+  font-size: 1.35rem;
   font-weight: 900;
   letter-spacing: -0.5px;
   color: #fff;
@@ -84,9 +84,9 @@ html, body {
 }
 
 .results-main {
-  max-width: 960px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 24px 24px 60px;
+  padding: 32px 32px 72px;
   display: flex;
   flex-direction: column;
   gap: 16px;
@@ -97,9 +97,9 @@ html, body {
 ───────────────────────────────────── */
 
 .brand h1 {
-  font-size: 2.6rem;
+  font-size: 3.6rem;
   font-weight: 900;
-  letter-spacing: -1.5px;
+  letter-spacing: -2px;
   color: #fff;
   line-height: 1;
   margin-bottom: 4px;
@@ -112,7 +112,7 @@ html, body {
   background-clip: text;
 }
 
-.tagline { color: #5a5a78; font-size: 0.88rem; }
+.tagline { color: #5a5a78; font-size: 1.1rem; }
 
 /* ─────────────────────────────────────
    SHARED: Search form
@@ -124,12 +124,12 @@ html, body {
 
 .search-input {
   width: 100%;
-  padding: 13px 16px;
+  padding: 16px 20px;
   background: #0f0f1e;
   border: 1px solid #1e1e38;
-  border-radius: 10px;
+  border-radius: 12px;
   color: #fff;
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
@@ -142,13 +142,13 @@ html, body {
 .search-input::placeholder { color: #3a3a58; }
 
 .search-btn {
-  padding: 13px 22px;
+  padding: 16px 28px;
   background: #7c6bff;
   color: #fff;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 1rem;
   cursor: pointer;
   transition: background 0.15s, transform 0.1s;
   white-space: nowrap;
@@ -191,11 +191,11 @@ html, body {
 .suggestion-item:last-child { border-bottom: none; }
 .suggestion-item:hover { background: #151528; }
 
-.suggestion-thumb    { width: 30px; height: 44px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
-.suggestion-no-img   { width: 30px; height: 44px; background: #1a1a30; border-radius: 4px; flex-shrink: 0; }
+.suggestion-thumb    { width: 36px; height: 54px; object-fit: cover; border-radius: 4px; flex-shrink: 0; }
+.suggestion-no-img   { width: 36px; height: 54px; background: #1a1a30; border-radius: 4px; flex-shrink: 0; }
 .suggestion-text     { display: flex; flex-direction: column; gap: 2px; }
-.suggestion-text strong { font-size: 0.85rem; color: #e0e0f0; }
-.suggestion-text span   { font-size: 0.72rem; color: #4a4a68; }
+.suggestion-text strong { font-size: 0.98rem; color: #e0e0f0; }
+.suggestion-text span   { font-size: 0.8rem; color: #4a4a68; }
 
 /* ─────────────────────────────────────
    SHARED: Utility
@@ -213,8 +213,8 @@ html, body {
 .empty-state, .status-msg {
   text-align: center;
   color: #3a3a58;
-  padding: 32px;
-  font-size: 0.88rem;
+  padding: 40px;
+  font-size: 1rem;
 }
 
 /* ─────────────────────────────────────
@@ -223,8 +223,8 @@ html, body {
 
 .results-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+  gap: 18px;
 }
 
 .result-card {
@@ -260,9 +260,9 @@ html, body {
   font-size: 0.72rem;
 }
 
-.result-info { padding: 8px; flex: 1; }
-.result-info strong { display: block; font-size: 0.78rem; color: #d0d0e8; line-height: 1.3; margin-bottom: 3px; }
-.result-info span   { font-size: 0.66rem; color: #3a3a58; }
+.result-info { padding: 10px 12px 12px; flex: 1; }
+.result-info strong { display: block; font-size: 0.95rem; color: #d0d0e8; line-height: 1.3; margin-bottom: 4px; }
+.result-info span   { font-size: 0.8rem; color: #3a3a58; }
 
 /* ─────────────────────────────────────
    SHARED: Detail view
@@ -274,18 +274,18 @@ html, body {
   color: #3a3a58;
   cursor: pointer;
   padding: 0;
-  font-size: 0.82rem;
-  margin-bottom: 16px;
+  font-size: 0.95rem;
+  margin-bottom: 20px;
   display: block;
   transition: color 0.15s;
 }
 .back-btn:hover { color: #9090b8; }
 
-.detail-header   { display: flex; gap: 16px; margin-bottom: 20px; align-items: flex-start; }
-.detail-poster   { width: 100px; border-radius: 6px; flex-shrink: 0; box-shadow: 0 6px 18px rgba(0,0,0,0.5); }
+.detail-header   { display: flex; gap: 24px; margin-bottom: 28px; align-items: flex-start; }
+.detail-poster   { width: 150px; border-radius: 6px; flex-shrink: 0; box-shadow: 0 6px 18px rgba(0,0,0,0.5); }
 
 .detail-type {
-  font-size: 0.68rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #7c6bff;
@@ -294,7 +294,7 @@ html, body {
 }
 
 .detail-meta h2 {
-  font-size: 1.4rem;
+  font-size: 2rem;
   font-weight: 800;
   color: #fff;
   line-height: 1.2;
@@ -302,20 +302,20 @@ html, body {
   letter-spacing: -0.3px;
 }
 
-.overview { color: #5a5a78; font-size: 0.83rem; line-height: 1.6; }
+.overview { color: #6a6a88; font-size: 1rem; line-height: 1.6; max-width: 760px; }
 
 /* ─────────────────────────────────────
    SHARED: Provider groups
 ───────────────────────────────────── */
 
-.providers-section { display: flex; flex-direction: column; gap: 20px; }
-.provider-group    { display: flex; flex-direction: column; gap: 8px; }
+.providers-section { display: flex; flex-direction: column; gap: 28px; }
+.provider-group    { display: flex; flex-direction: column; gap: 10px; }
 
 .group-header {
   display: flex;
   align-items: center;
   gap: 7px;
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.07em;
@@ -325,7 +325,7 @@ html, body {
 .sub-header { color: #3b82f6; }
 
 .group-dot {
-  width: 6px; height: 6px;
+  width: 8px; height: 8px;
   border-radius: 50%;
   background: #a78bfa;
   box-shadow: 0 0 5px #a78bfa;
@@ -333,9 +333,9 @@ html, body {
 }
 .sub-dot { background: #3b82f6; box-shadow: 0 0 5px #3b82f6; }
 
-.hint { font-size: 0.72rem; color: #3a3a58; }
+.hint { font-size: 0.85rem; color: #4a4a68; }
 
-.country-list { display: flex; flex-direction: column; gap: 4px; }
+.country-list { display: flex; flex-direction: column; gap: 6px; }
 
 .country-row {
   display: flex;
@@ -344,8 +344,8 @@ html, body {
   gap: 10px;
   background: #0e0e1b;
   border: 1px solid #181830;
-  border-radius: 7px;
-  padding: 8px 12px;
+  border-radius: 9px;
+  padding: 12px 16px;
   transition: border-color 0.15s;
 }
 .country-row:hover { border-color: #2a2a50; }
@@ -353,13 +353,13 @@ html, body {
 .country-label {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.82rem;
+  gap: 10px;
+  font-size: 1rem;
   color: #9090b0;
   flex-shrink: 0;
 }
 
-.country-flag { width: 18px; height: auto; border-radius: 2px; flex-shrink: 0; }
+.country-flag { width: 24px; height: auto; border-radius: 2px; flex-shrink: 0; }
 
 .badge {
   font-size: 0.6rem;
@@ -371,7 +371,7 @@ html, body {
   letter-spacing: 0.05em;
 }
 
-.service-logos { display: flex; gap: 5px; flex-wrap: wrap; justify-content: flex-end; }
+.service-logos { display: flex; gap: 7px; flex-wrap: wrap; justify-content: flex-end; }
 
 .service-logos a {
   display: block;
@@ -383,16 +383,16 @@ html, body {
   box-shadow: 0 4px 12px rgba(124, 107, 255, 0.4);
 }
 
-.service-logo { width: 28px; height: 28px; border-radius: 5px; object-fit: cover; }
+.service-logo { width: 38px; height: 38px; border-radius: 7px; object-fit: cover; }
 
 .no-free {
   background: #0e0e1b;
   border: 1px solid #181830;
   border-radius: 7px;
-  padding: 16px;
+  padding: 20px;
   text-align: center;
   color: #3a3a58;
-  font-size: 0.82rem;
+  font-size: 1rem;
 }
 
 /* ─────────────────────────────────────
@@ -403,12 +403,12 @@ html, body {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
+  padding: 11px 16px;
   background: #0f0f1e;
   border: 1px solid #1e1e38;
-  border-radius: 8px;
+  border-radius: 10px;
   color: #b0b0c8;
-  font-size: 0.8rem;
+  font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
   white-space: nowrap;
@@ -421,26 +421,26 @@ html, body {
 /* Landing page: tucked in the top-right corner */
 .landing .watchlist-toggle {
   position: absolute;
-  top: 20px;
-  right: 24px;
+  top: 24px;
+  right: 32px;
   z-index: 3;
 }
 
 .watchlist-count {
   background: #7c6bff;
   color: #fff;
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   font-weight: 700;
-  padding: 1px 6px;
+  padding: 1px 7px;
   border-radius: 999px;
 }
 
 .section-title {
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: #fff;
   letter-spacing: -0.3px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .watchlist-view .hint { margin-bottom: 12px; }
@@ -450,15 +450,15 @@ html, body {
 
 .save-btn {
   position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 26px;
-  height: 26px;
+  top: 8px;
+  right: 8px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.15);
   background: rgba(8, 8, 15, 0.75);
   color: #fff;
-  font-size: 0.95rem;
+  font-size: 1.15rem;
   line-height: 1;
   cursor: pointer;
   display: flex;
@@ -471,13 +471,13 @@ html, body {
 .save-btn.saved { background: #7c6bff; border-color: #7c6bff; }
 
 .detail-save-btn {
-  margin-top: 12px;
-  padding: 7px 12px;
+  margin-top: 16px;
+  padding: 10px 16px;
   background: #0f0f1e;
   border: 1px solid #4a3a88;
   border-radius: 8px;
   color: #a78bfa;
-  font-size: 0.78rem;
+  font-size: 0.92rem;
   font-weight: 700;
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
@@ -491,10 +491,14 @@ html, body {
 ───────────────────────────────────── */
 
 @media (max-width: 500px) {
-  .landing-content { padding-top: 60px; }
+  .landing-content { padding-top: 70px; max-width: 100%; }
   .globe-wrapper { width: 95vw; }
-  .brand h1 { font-size: 2rem; }
-  .results-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+  .brand h1 { font-size: 2.4rem; }
+  .tagline { font-size: 0.95rem; }
+  .search-btn { padding: 14px 18px; }
+  .detail-poster { width: 110px; }
+  .detail-meta h2 { font-size: 1.5rem; }
+  .results-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 12px; }
   .detail-header { flex-direction: column; }
   .results-header { padding: 10px 14px; flex-wrap: wrap; }
   .results-header .search-form { order: 3; }
