@@ -35,3 +35,15 @@ export async function getProviderList() {
   for (const p of lists.flat()) if (!byId.has(p.provider_id)) byId.set(p.provider_id, p)
   return [...byId.values()]
 }
+
+// Genres, runtime and rating for one title (used by the watchlist filters)
+export async function getDetails(id, mediaType) {
+  const res = await fetch(`${BASE_URL}/${mediaType}/${id}?language=en-US`, { headers })
+  const d = await res.json()
+  return {
+    genres: (d.genres || []).map(g => g.name),
+    // shows: length of an episode
+    runtime: d.runtime || d.episode_run_time?.[0] || d.last_episode_to_air?.runtime || null,
+    rating: d.vote_count ? d.vote_average : null,
+  }
+}

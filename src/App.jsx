@@ -3,9 +3,11 @@ import { searchMulti, getWatchProviders } from './api/tmdb'
 import Globe from './components/Globe'
 import ServicesPicker from './components/ServicesPicker'
 import AlertsPanel from './components/AlertsPanel'
+import WatchlistFilters, { NO_FILTERS, matches } from './components/WatchlistFilters'
 import useWatchlist from './hooks/useWatchlist'
 import useMyServices from './hooks/useMyServices'
 import useAlerts from './hooks/useAlerts'
+import useTitleDetails from './hooks/useTitleDetails'
 import { streamingServices } from './services'
 import './App.css'
 
@@ -53,7 +55,9 @@ function getServiceUrl(providerName, title) {
   return urls[providerName] || null
 }
 
-function PosterCard({ item, saved, mine = [], onSelect, onToggleSave }) {
+const formatRuntime = m => m >= 60 ? `${Math.floor(m / 60)}h${m % 60 ? ` ${m % 60}m` : ''}` : `${m}m`
+
+function PosterCard({ item, saved, mine = [], details, onSelect, onToggleSave }) {
   return (
     <div className="card-wrap">
       <button className={`result-card${mine.length ? ' on-mine' : ''}`} onClick={() => onSelect(item)}>
@@ -74,7 +78,9 @@ function PosterCard({ item, saved, mine = [], onSelect, onToggleSave }) {
           <span>
             {item.media_type === 'tv' ? 'TV Show' : 'Movie'}
             {(item.release_date || item.first_air_date) && ` · ${(item.release_date || item.first_air_date).slice(0, 4)}`}
+            {details?.runtime && ` · ${formatRuntime(details.runtime)}${item.media_type === 'tv' ? '/ep' : ''}`}
           </span>
+          {details?.genres.length > 0 && <span className="card-genres">{details.genres.slice(0, 2).join(' · ')}</span>}
         </div>
       </button>
       <button
@@ -122,6 +128,9 @@ export default function App() {
   const watchlist = useWatchlist()
   const myServices = useMyServices()
   const alerts = useAlerts(watchlist.items, myServices.keys)
+  const titleDetails = useTitleDetails(watchlist.items)
+  const [filters, setFilters] = useState(NO_FILTERS)
+  const filtered = watchlist.items.filter(i => matches(i, filters, titleDetails.get(i), alerts.mineFor))
 
   // Debounced autocomplete
   useEffect(() => {
@@ -372,18 +381,35 @@ export default function App() {
                   Click a title to see where it's streaming.
                   {myServices.services.length === 0 && <> <button className="link-btn" onClick={() => setShowPicker(true)}>Pick your services</button> to see which ones you can already watch.</>}
                 </p>
-                <div className="results-grid">
-                  {watchlist.items.map(item => (
-                    <PosterCard
-                      key={`${item.media_type}:${item.id}`}
-                      item={item}
-                      saved
-                      mine={alerts.mineFor(item)}
-                      onSelect={handleSelect}
-                      onToggleSave={watchlist.toggle}
-                    />
-                  ))}
-                </div>
+                <WatchlistFilters
+                  items={watchlist.items}
+                  filters={filters}
+                  setFilters={setFilters}
+                  getDetails={titleDetails.get}
+                  hasServices={myServices.services.length > 0}
+                  shown={filtered.length}
+                  onSurprise={() => handleSelect(filtered[Math.floor(Math.random() * filtered.length)], 'watchlist')}
+                />
+                {filtered.length > 0 ? (
+                  <div className="results-grid">
+                    {filtered.map(item => (
+                      <PosterCard
+                        key={`${item.media_type}:${item.id}`}
+                        item={item}
+                        saved
+                        mine={alerts.mineFor(item)}
+                        details={titleDetails.get(item)}
+                        onSelect={handleSelect}
+                        onToggleSave={watchlist.toggle}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="empty-state">
+                    {titleDetails.loading ? 'Loading title details…' : 'Nothing on your watchlist matches these filters.'}{' '}
+                    <button className="link-btn" onClick={() => setFilters(NO_FILTERS)}>Clear filters</button>
+                  </p>
+                )}
               </>
             ) : (
               <p className="empty-state">Nothing saved yet. Hit + on any title to add it here.</p>

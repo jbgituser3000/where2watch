@@ -727,3 +727,52 @@ html, body {
   .results-main { padding: 16px 14px 40px; }
   .landing .nav-buttons { top: 14px; right: 14px; }
 }
+
+/* ─────────────────────────────────────
+   WATCHLIST: Filters
+───────────────────────────────────── */
+.filters {
+  background: #0c0c18;
+  border: 1px solid #1a1a30;
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+}
+.filters-top { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.filters-toggle {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none; padding: 0;
+  color: #e0e0f0; font: inherit; font-weight: 700; cursor: pointer;
+}
+.filters-count { font-size: 0.85rem; color: #5a5a78; }
+.surprise-btn {
+  margin-left: auto;
+  padding: 8px 14px;
+  background: #7c6af7; border: none; border-radius: 9px;
+  color: #fff; font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer;
+  transition: background 0.15s;
+}
+.surprise-btn:hover:not(:disabled) { background: #9580ff; }
+.surprise-btn:disabled { opacity: 0.4; cursor: default; }
+.filters-body { display: flex; flex-direction: column; gap: 10px; margin-top: 12px; }
+.filters-body .hint { margin: 0; }
+.filter-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.filter-chip, .filter-select {
+  padding: 7px 13px;
+  background: #0f0f1e;
+  border: 1px solid #1e1e38;
+  border-radius: 999px;
+  color: #b0b0c8;
+  font: inherit; font-size: 0.88rem;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.filter-chip:hover, .filter-select:hover { border-color: #4a3a88; color: #fff; }
+.filter-chip.on { background: #221a48; border-color: #7c6af7; color: #fff; }
+.filter-select { padding-right: 10px; }
+.filter-select option { background: #0f0f1e; }
+.result-info .card-genres { display: block; margin-top: 3px; font-size: 0.75rem; color: #5a5a78; }
+
+@media (max-width: 500px) {
+  .surprise-btn { margin-left: 0; width: 100%; }
+}
