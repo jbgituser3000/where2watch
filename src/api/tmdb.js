@@ -1,17 +1,13 @@
-const BASE_URL = 'https://api.themoviedb.org/3'
-const TOKEN = import.meta.env.VITE_TMDB_TOKEN
-
-const headers = {
-  Authorization: `Bearer ${TOKEN}`,
-  'Content-Type': 'application/json',
+// All TMDB requests go through our own /api/tmdb proxy, which holds the API
+// token on the server (see api/tmdb.js). Nothing secret ships to the browser.
+function tmdb(path, params = {}) {
+  const q = new URLSearchParams({ path, ...params })
+  return fetch(`/api/tmdb?${q}`)
 }
 
 // Search movies and TV shows simultaneously
 export async function searchMulti(query) {
-  const res = await fetch(
-    `${BASE_URL}/search/multi?query=${encodeURIComponent(query)}&include_adult=false`,
-    { headers }
-  )
+  const res = await tmdb('search/multi', { query })
   const data = await res.json()
   // exclude "person" results (actors/directors), only keep movies and shows
   return (data.results || []).filter(r => r.media_type === 'movie' || r.media_type === 'tv')
@@ -19,7 +15,7 @@ export async function searchMulti(query) {
 
 // Get streaming availability for every country
 export async function getWatchProviders(id, mediaType) {
-  const res = await fetch(`${BASE_URL}/${mediaType}/${id}/watch/providers`, { headers })
+  const res = await tmdb(`${mediaType}/${id}/watch/providers`)
   const data = await res.json()
   return data.results || {}
 }
@@ -27,7 +23,7 @@ export async function getWatchProviders(id, mediaType) {
 // Every streaming service TMDB knows about (movie + TV lists, deduped by id)
 export async function getProviderList() {
   const lists = await Promise.all(['movie', 'tv'].map(async type => {
-    const res = await fetch(`${BASE_URL}/watch/providers/${type}?language=en-US`, { headers })
+    const res = await tmdb(`watch/providers/${type}`, { language: 'en-US' })
     const data = await res.json()
     return data.results || []
   }))
@@ -41,7 +37,7 @@ export const DETAILS_VERSION = 2
 
 // Genres, runtime and rating for one title (used by the watchlist filters)
 export async function getDetails(id, mediaType) {
-  const res = await fetch(`${BASE_URL}/${mediaType}/${id}?language=en-US`, { headers })
+  const res = await tmdb(`${mediaType}/${id}`, { language: 'en-US' })
   if (!res.ok) throw new Error(`TMDB ${res.status}`) // e.g. 429 when rate limited — don't cache as empty
   const d = await res.json()
   return {
