@@ -776,3 +776,27 @@ html, body {
 @media (max-width: 500px) {
   .surprise-btn { margin-left: 0; width: 100%; }
 }
+
+/* Account (log in / sign up) */
+.account-modal { max-width: 440px; }
+.account-tabs { display: flex; gap: 4px; padding: 4px; background: #0f0f1e; border: 1px solid #1e1e38; border-radius: 10px; }
+.account-tabs button {
+  flex: 1; padding: 9px; border: none; border-radius: 7px; background: none;
+  color: #8a8aa8; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+}
+.account-tabs button.on { background: #1e1e38; color: #fff; }
+.account-form { display: flex; flex-direction: column; gap: 14px; }
+.account-form label { display: flex; flex-direction: column; gap: 6px; }
+.account-form label > span { color: #b0b0c8; font-size: 0.9rem; font-weight: 600; }
+.account-form .search-input { width: 100%; box-sizing: border-box; }
+.account-form .search-btn { width: 100%; }
+.account-msg { margin: 0; }
+.account-notice { color: #4ade80; font-size: 0.95rem; line-height: 1.4; }
+.account-links { display: flex; justify-content: center; }
+.account-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.account-email { color: #fff; word-break: break-all; }
+.nav-btn.account { max-width: 180px; }
+.nav-btn.account .account-initial {
+  width: 22px; height: 22px; border-radius: 50%; background: #4a3a88; color: #fff;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 800;
+}

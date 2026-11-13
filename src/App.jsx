@@ -3,6 +3,8 @@ import { searchMulti, getWatchProviders } from './api/tmdb'
 import Globe from './components/Globe'
 import ServicesPicker from './components/ServicesPicker'
 import AlertsPanel from './components/AlertsPanel'
+import AccountModal from './components/AccountModal'
+import useAuth from './hooks/useAuth'
 import WatchlistFilters, { NO_FILTERS, matches } from './components/WatchlistFilters'
 import useWatchlist from './hooks/useWatchlist'
 import useMyServices from './hooks/useMyServices'
@@ -125,6 +127,10 @@ export default function App() {
   const [error, setError] = useState(null)
   const [page, setPage] = useState('landing') // 'landing' | 'results' | 'watchlist'
   const [showPicker, setShowPicker] = useState(false)
+  const [showAccount, setShowAccount] = useState(false)
+  const auth = useAuth()
+  // the password-reset email link lands here; open the "new password" form
+  useEffect(() => { if (auth.recovering) setShowAccount(true) }, [auth.recovering])
   const watchlist = useWatchlist()
   const myServices = useMyServices()
   const alerts = useAlerts(watchlist.items, myServices.keys)
@@ -316,10 +322,25 @@ export default function App() {
           <span className="nav-count">{watchlist.items.length}</span>
         )}
       </button>
+      {auth.enabled && (
+        <button
+          className="nav-btn account"
+          onClick={() => setShowAccount(true)}
+          aria-label={auth.user ? `Account: ${auth.user.email}` : 'Log in or sign up'}
+          title={auth.user ? auth.user.email : undefined}
+        >
+          {auth.user ? <span className="account-initial">{auth.user.email[0].toUpperCase()}</span> : 'Log in'}
+        </button>
+      )}
     </nav>
   )
 
-  const picker = showPicker && <ServicesPicker myServices={myServices} onClose={() => setShowPicker(false)} />
+  const picker = (
+    <>
+      {showPicker && <ServicesPicker myServices={myServices} onClose={() => setShowPicker(false)} />}
+      {showAccount && <AccountModal auth={auth} onClose={() => { setShowAccount(false); auth.doneRecovering() }} />}
+    </>
+  )
 
   // ── Landing page ──
   if (page === 'landing') {
